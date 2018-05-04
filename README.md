@@ -18,3 +18,8 @@ Below are examples made using Beta = 0.5, LATENT_DIM = 256, and linear interpola
 <img src="https://github.com/keniMawson/PokeVAE/blob/master/interpolate/gif/5_generate_animation.gif" width="200" height="200"/>
 <img src="https://github.com/keniMawson/PokeVAE/blob/master/interpolate/gif/6_generate_animation.gif" width="200" height="200"/>
 </p>
+
+<p align="center">
+ <img src="https://github.com/keniMawson/PokeVAE/blob/master/output/epoch_12300.png" width="1200" height="800"/>
+</p>
+  
