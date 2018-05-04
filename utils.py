@@ -77,7 +77,7 @@ def load_checkpoint(filename):
     return net, epoch, losses, optimizer#, scheduler
 
 
-def pokePlot(images, vae, ROW, COL):
+def pokePlot(images, vae, ROW, COL, epoch):
     f, axarr = plt.subplots(ROW,COL, figsize=(25,ROW*4))
     for row in range(ROW//2):
         for col in range(COL):
@@ -88,3 +88,4 @@ def pokePlot(images, vae, ROW, COL):
             x_out = x_out.permute(0,2,3,1)
             axarr[2*row+1,col].imshow(x_out.data.cpu().squeeze().numpy())
     plt.show()
+    f.savefig('./output/epoch_'+str(epoch)+'.png')
