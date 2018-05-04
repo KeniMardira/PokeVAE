@@ -16,7 +16,15 @@ from IPython.display import clear_output
 import imageio
 
 import torch.optim as optim
-#Define Criterion
+import json
+
+def import_json(path):
+    with open(path, 'r') as file:
+        hyper_parameters = json.load(file)
+    return hyper_parameters
+
+hyper_parameters = import_json('./hyper_parameters.json')
+RESIZE = hyper_parameters['RESIZE']
 
 
 def create_csv():

@@ -3,8 +3,17 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 
-LATENT_DIM = 40
-RESIZE = 128
+import json
+
+def import_json(path):
+    with open(path, 'r') as file:
+        hyper_parameters = json.load(file)
+    return hyper_parameters
+
+hyper_parameters = import_json('./hyper_parameters.json')
+
+LATENT_DIM = hyper_parameters['LATENT_DIM']
+RESIZE = hyper_parameters['RESIZE']
 
 class Net(nn.Module):
     def __init__(self, latent_dim=LATENT_DIM):
