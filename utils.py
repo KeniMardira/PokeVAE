@@ -25,7 +25,7 @@ def import_json(path):
 
 hyper_parameters = import_json('./hyper_parameters.json')
 RESIZE = hyper_parameters['RESIZE']
-
+BETA = hyper_parameters['BETA']
 
 def create_csv():
     pokelist = os.listdir("./Pokemon/")
@@ -45,12 +45,14 @@ class PokeSet(Utils.Dataset): # Main dataset class for dataloader
     
     def __getitem__(self,index): # must be written for dataset module
         pokemon = mpimg.imread(self.path + self.pokelist[index][0])
+        if pokemon.shape[-1] == 4:
+            pokemon=pokemon[:,:,:3]
         pokemon = cv2.resize(pokemon, (RESIZE,RESIZE))
         pokemon = (pokemon - np.min(pokemon))/np.max(pokemon - np.min(pokemon))
         return pokemon
 
     
-def criterion(x_out, target, z_mean, z_logvar, alpha = 1, beta = 10):
+def criterion(x_out, target, z_mean, z_logvar, alpha = 1, beta =  BETA):
     bce = F.mse_loss(x_out, target, size_average=False) #Use MSE loss for images
     kl = -0.5 * torch.sum(1 + z_logvar - (z_mean**2) - torch.exp(z_logvar)) #Analytical KL Divergence - Assumes p(z) is Gaussian Distribution
     loss = ((alpha * bce) + (beta * kl)) / x_out.size(0)    
@@ -71,7 +73,7 @@ def load_checkpoint(filename):
     net.load_state_dict(checkpoint['state_dict'])
     epoch = checkpoint['epoch']
     losses = checkpoint['losses']
-    optimizer = optim.Adam(net.parameters(), lr=0.0001)
+    optimizer = optim.Adam(net.parameters(), lr=0.001)
     optimizer.load_state_dict(checkpoint['optimizer'])
     print("Loaded checkpoint: " + filename)
     return net, epoch, losses, optimizer#, scheduler

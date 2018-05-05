@@ -1,0 +1,10 @@
+./Pokemon/*
+./sweep/*
+./interpolate/*
+./output/*
+*.png
+*.jpg
+*.gif
+.ipynb_checkpoints/*
+checkpoints/*
+__pycache__/*
