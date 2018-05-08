@@ -73,7 +73,7 @@ def load_checkpoint(filename):
     net.load_state_dict(checkpoint['state_dict'])
     epoch = checkpoint['epoch']
     losses = checkpoint['losses']
-    optimizer = optim.Adam(net.parameters(), lr=0.001)
+    optimizer = optim.Adam(net.parameters(), lr=0.0002)
     optimizer.load_state_dict(checkpoint['optimizer'])
     print("Loaded checkpoint: " + filename)
     return net, epoch, losses, optimizer#, scheduler
