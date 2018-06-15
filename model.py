@@ -2,8 +2,9 @@ import torch
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-
+import math
 import json
+import matplotlib.pyplot as plt
 
 def import_json(path):
     with open(path, 'r') as file:
@@ -44,6 +45,65 @@ class Net(nn.Module):
         self.conv_d3 = nn.Conv2d(64, 32, kernel_size=3, stride=1, padding=1)
         self.bn_d3 = nn.BatchNorm2d(32)
         self.conv_d4 = nn.Conv2d(32, 3, kernel_size=3, stride=1, padding=1)
+        
+        ##### VAMP PRIOR STUFF ####
+        self.number_components = 500 #num of pseudo-inputs
+        
+        self.meanproj = nn.Linear(self.number_components, (3*RESIZE*RESIZE), bias=False)
+        self.nonlinear = nn.Hardtanh(min_val=0.0, max_val=1.0)
+        
+        self.idle_input = Variable(torch.eye(self.number_components, self.number_components), requires_grad = False).cuda()
+        
+        self.means = nn.Sequential(self.meanproj, self.nonlinear)
+        ##### VAMP PRIOR STUFF ####
+        
+        
+    def calculate_loss(self, x, beta=10.):
+        x_out, z_mean, z_logvar = self.forward(x)
+        # plt.imshow(x[0,:,:,:].permute(1,2,0).squeeze().cpu().numpy())
+        # plt.show()
+        # plt.imshow(x_out[0,:,:,:].detach().permute(1,2,0).cpu().squeeze().numpy())
+        # plt.show()
+        z = self.latent(z_mean, z_logvar)
+        log_p_z = self.log_p_z(z)   
+        # z = b x L
+        # z_mean = b x L
+        # z_logvar = b x L
+        log_q_z = self.log_norm(z, z_mean, z_logvar, dim=1)
+        
+        RE = F.l1_loss(x_out, x)
+        KL = torch.mean(-(log_p_z - log_q_z))
+        
+        loss = RE + beta*KL
+        
+        
+        return loss, RE, KL
+        
+    def log_p_z(self, z):
+        C = self.number_components
+        
+        X = self.means(self.idle_input)
+        X = X.view(-1, 3, RESIZE, RESIZE)
+        z_p_mean, z_p_logvar = self.encoder(X)
+        
+        z_expand = z.unsqueeze(1) # b x 1 x L
+        means = z_p_mean.unsqueeze(0) # 1 x pseudo x L
+        logvars = z_p_logvar.unsqueeze(0) # 1 x pseudo x L
+        a = self.log_norm(z_expand, means, logvars, dim=2) - math.log(C) # b x pseudo
+        
+        a_max, _ = torch.max(a,1) # b
+        
+        log_prior = a_max + torch.log(torch.sum(torch.exp(a-a_max.unsqueeze(1)),1)) # b
+        return log_prior
+    
+    
+    
+    def log_norm(self, z, zmean, zlogvar, dim, average=True):
+        log_normal = -0.5 * ( zlogvar + torch.pow( z - zmean, 2 ) / torch.exp( zlogvar ) )
+        if average:
+            return torch.mean( log_normal, dim )
+        else:
+            return torch.sum( log_normal, dim )
         
     def encoder(self, x):
         ''' encoder: q(z|x)

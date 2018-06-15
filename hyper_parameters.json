@@ -1,6 +1,6 @@
 {
     "LATENT_DIM": 50,
-    "BATCH_SIZE": 128,
+    "BATCH_SIZE": 16,
     "RESIZE": 256,
     "BETA": 10
 }
