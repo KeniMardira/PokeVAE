@@ -65,14 +65,13 @@ class Net(nn.Module):
         # plt.imshow(x_out[0,:,:,:].detach().permute(1,2,0).cpu().squeeze().numpy())
         # plt.show()
         z = self.latent(z_mean, z_logvar)
-        log_p_z = self.log_p_z(z)   
+        log_p_z = self.log_p_z(z)   # b
         # z = b x L
         # z_mean = b x L
         # z_logvar = b x L
-        log_q_z = self.log_norm(z, z_mean, z_logvar, dim=1)
-        
-        RE = F.l1_loss(x_out, x)
-        KL = torch.mean(-(log_p_z - log_q_z))
+        log_q_z = self.log_norm(z, z_mean, z_logvar, dim=1) # b
+        RE = F.l1_loss(x_out, x, size_average=False)
+        KL = torch.sum(-(log_p_z - log_q_z))
         
         loss = RE + beta*KL
         
@@ -98,7 +97,7 @@ class Net(nn.Module):
     
     
     
-    def log_norm(self, z, zmean, zlogvar, dim, average=True):
+    def log_norm(self, z, zmean, zlogvar, dim, average=False):
         log_normal = -0.5 * ( zlogvar + torch.pow( z - zmean, 2 ) / torch.exp( zlogvar ) )
         if average:
             return torch.mean( log_normal, dim )
