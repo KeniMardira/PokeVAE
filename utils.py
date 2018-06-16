@@ -106,7 +106,7 @@ def pokePlot(images, vae, ROW, COL, epoch):
     f, axarr = plt.subplots(ROW,COL, figsize=(25,ROW*4))
     for row in range(ROW//2):
         for col in range(COL):
-            image = images[col+(COL*row),:,:,:].unsqueeze(0)
+            image = images[col+((COL-1)*row),:,:,:].unsqueeze(0)
             axarr[2*row,col].imshow(image.squeeze().numpy())
             image = image.permute(0,3,1,2)
             x_out, z_mean, z_logvar = vae(Variable(image.float()).cuda())
