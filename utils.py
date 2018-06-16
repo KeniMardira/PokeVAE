@@ -33,6 +33,12 @@ def create_csv():
         wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
         wr.writerow(pokelist)
         
+def create_obamacsv():
+    obamalist = os.listdir("./images/")
+    with open("./ObamaList", 'w') as myfile:
+        wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+        wr.writerow(obamalist)
+        
         
 # Dataloader class that works with VCTK datasets. Init require the path to a folder where voice_data are stored.
 class PokeSet(Utils.Dataset): # Main dataset class for dataloader
@@ -50,6 +56,23 @@ class PokeSet(Utils.Dataset): # Main dataset class for dataloader
         pokemon = cv2.resize(pokemon, (RESIZE,RESIZE))
         pokemon = (pokemon - np.min(pokemon))/np.max(pokemon - np.min(pokemon))
         return pokemon
+    
+# Dataloader class that works with VCTK datasets. Init require the path to a folder where voice_data are stored.
+class ObamaSet(Utils.Dataset): # Main dataset class for dataloader
+    def __init__(self, path): # takes two input, the input and output Tensors
+        self.path = path
+        self.obamalist = pd.read_csv("ObamaList",header=None)
+
+    def __len__(self): # must be written for dataset module
+        return len(os.listdir(self.path))
+    
+    def __getitem__(self,index): # must be written for dataset module
+        obama = mpimg.imread(self.path + self.obamalist[index][0])
+        if obama.shape[-1] == 4:
+            obama=obama[:,:,:3]
+        obama = cv2.resize(obama, (RESIZE,RESIZE))
+        obama = (obama - np.min(obama))/np.max(obama - np.min(obama))
+        return obama
 
     
 def criterion(x_out, target, z_mean, z_logvar, alpha = 1, beta =  BETA):
