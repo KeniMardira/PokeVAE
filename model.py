@@ -60,10 +60,7 @@ class Net(nn.Module):
         
     def calculate_loss(self, x, beta=10.):
         x_out, z_mean, z_logvar = self.forward(x)
-        # plt.imshow(x[0,:,:,:].permute(1,2,0).squeeze().cpu().numpy())
-        # plt.show()
-        # plt.imshow(x_out[0,:,:,:].detach().permute(1,2,0).cpu().squeeze().numpy())
-        # plt.show()
+
         z = self.latent(z_mean, z_logvar)
         log_p_z = self.log_p_z(z)   # b
         # z = b x L
@@ -77,19 +74,19 @@ class Net(nn.Module):
         
         
         return loss, RE, KL
-        
+
+    
     def log_p_z(self, z):
-        C = self.number_components
+        C = self.number_components # number of pseudo inputs
         
-        X = self.means(self.idle_input)
-        X = X.view(-1, 3, RESIZE, RESIZE)
-        z_p_mean, z_p_logvar = self.encoder(X)
+        X = self.means(self.idle_input) # get C amount of pseudo inputs
+        X = X.view(-1, 3, RESIZE, RESIZE) # reshape pseudo inputs to the same shape as the actual input
+        z_p_mean, z_p_logvar = self.encoder(X) # grab the mean and logvar of the aggregated posterior (actual prior modeled by pseudo input)
         
         z_expand = z.unsqueeze(1) # b x 1 x L
         means = z_p_mean.unsqueeze(0) # 1 x pseudo x L
         logvars = z_p_logvar.unsqueeze(0) # 1 x pseudo x L
         a = self.log_norm(z_expand, means, logvars, dim=2) - math.log(C) # b x pseudo
-        
         a_max, _ = torch.max(a,1) # b
         
         log_prior = a_max + torch.log(torch.sum(torch.exp(a-a_max.unsqueeze(1)),1)) # b
