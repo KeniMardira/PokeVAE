@@ -16,6 +16,15 @@ hyper_parameters = import_json('./hyper_parameters.json')
 LATENT_DIM = hyper_parameters['LATENT_DIM']
 RESIZE = hyper_parameters['RESIZE']
 
+class PlanarFlow(nn.Module):
+    def __init__(self, K=8, latent_dim=LATENT_DIM):
+        super(PlanarFlow, self).__init__()
+        self.transform
+        
+    def forward(self, z):
+        
+        
+
 class Net(nn.Module):
     def __init__(self, latent_dim=LATENT_DIM):
         super(Net, self).__init__()
