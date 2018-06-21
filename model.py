@@ -19,10 +19,26 @@ RESIZE = hyper_parameters['RESIZE']
 class PlanarFlow(nn.Module):
     def __init__(self, K=8, latent_dim=LATENT_DIM):
         super(PlanarFlow, self).__init__()
-        self.transform
+        self.wb = []
+        self.u = []
+        for i in range(K):
+            self.wb.append(nn.Linear(latent_dim, 1))
+            self.u.append(nn.Linear(1, latent_dim, bias=False))
+            self.u[i].weight = nn.Parameter(self.u_constraint(self.u[i], self.wb[i]))
+            
+    def u_constraint(self, u, w):
+        u_out = u.weight + ((-1 + torch.log(1+torch.exp(w.weight @ u.weight))) - (w.weight @ u.weight))*(w.weight.transpose(0,1)/(torch.norm(w.weight)))
+        return u_out
+        
+    def transform(self, z, u, wb):
+        out = z + u(F.tanh(wb(z)))
+        return out
         
     def forward(self, z):
-        
+        z_T = z
+        for idx in range(len(self.wb)):
+            z_T = self.transform(z_T, self.u[idx], self.wb[idx])
+        return z_T
         
 
 class Net(nn.Module):
