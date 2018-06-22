@@ -24,15 +24,24 @@ class PlanarFlow(nn.Module):
         for i in range(K):
             self.wb.append(nn.Linear(latent_dim, 1))
             self.u.append(nn.Linear(1, latent_dim, bias=False))
-            self.u[i].weight = nn.Parameter(self.u_constraint(self.u[i], self.wb[i]))
+            # self.u[i].weight.data = (self.u_constraint(self.u[i].weight.data, self.wb[i].weight.data))
             
+    def scalar_func(self, x):
+        m_x = -1 + F.softplus(x)
+        return m_x
+    
     def u_constraint(self, u, w):
-        u_out = u.weight + ((-1 + torch.log(1+torch.exp(w.weight @ u.weight))) - (w.weight @ u.weight))*(w.weight.transpose(0,1)/(torch.norm(w.weight)))
+        u_out = u + ((self.scalar_func(w @ u)) - (w @ u))*(w.transpose(0,1)/torch.norm(w))
         return u_out
         
     def transform(self, z, u, wb):
         out = z + u(F.tanh(wb(z)))
         return out
+    
+    def determinant(self, z, u, w):
+        phi = (1/(torch.cosh(w(z)))) @ w.weight
+        ln_det = torch.log(torch.abs(1 + u(phi)))
+        return ln_det 
         
     def forward(self, z):
         z_T = z
